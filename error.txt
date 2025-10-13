@@ -1,0 +1,35 @@
+Voy a buscar en el código del backend el middleware de autenticación para ver cómo valida el token (archivo en middleware/auth o similar) y entender por qué devuelve 401/429. Ejecutaré una búsqueda por palabras clave relacionadas (auth, requireRole, Invalid session). 
+
+Searched text for `middleware/auth|requireRole|Invalid session|Invalid session|authorization|req.user|jwt.verify|Bearer`, 18 results
+
+Buscaré el archivo de middleware de autenticación que define `requireRole` y probablemente `requireAuth` o similar. Ejecutaré una búsqueda por `middleware` carpeta y `auth` en el backend. 
+
+Searched for files matching `**/*`, 20 matches
+
+Searched text for `middleware/auth`, no results
+
+Voy a buscar en el proyecto cualquier archivo que contenga 'requireRole' (mencionado en la ruta) para localizar el middleware auth. 
+
+Searched text for `requireRole`, no results
+
+Es posible que el código backend que pegaste provenga de otro repositorio o carpeta no en el workspace. Como no encuentro archivos backend en este proyecto (el proyecto es frontend Angular), no puedo inspeccionar el middleware de autenticación aquí. Te daré instrucciones concretas para revisar el backend (en tu servidor) y diagnósticos rápidos. También puedo añadir un interceptor en Angular localmente para verificar que el header Authorization se está enviando correctamente desde el cliente — eso nos ayudará a aislar si el problema es frontend o backend. ¿Quieres que implemente el interceptor ahora? Si prefieres verificar el backend, dime dónde está el código del servidor (ruta del proyecto) o copia aquí el middleware auth.js para que lo revise.
+He buscado en el workspace y no hay código del backend presente aquí — el repo actual contiene solo el frontend Angular. Por eso no pude encontrar el middleware de autenticación ni `requireRole` para inspeccionarlo. Para avanzar hay dos rutas útiles:
+
+Opción 1 — Yo implemento un HTTP interceptor en el frontend (rápido)
+- Qué hace: adjunta el header Authorization a todas las peticiones y registra en consola el header enviado.
+- Por qué ayuda: si después de añadirlo la petición del navegador incluye Authorization y aún recibes 401, entonces el problema está en el backend (token inválido, expirado o rechazo por lógica). Si tras el interceptor el header sigue sin aparecer, entonces hay un fallo en la configuración de la app frontend.
+- Tiempo: ~5–10 minutos. Puedo aplicarlo y luego te pido que vuelvas a intentar login y navegar a Pacientes.
+
+Opción 2 — Revisas y pegas aquí el middleware de autenticación del servidor
+- Qué necesitas buscar/pegar: el archivo que implementa la verificación del token (por ejemplo algo que use jwt.verify, o funciones llamadas requireAuth, requireRole, authMiddleware). Ese archivo contiene la lógica que devuelve 401/429 y podremos identificar si:
+  - espera el token en otro header/cookie,
+  - tiene un bug que lee mal el header,
+  - aplica rate-limiting (429) por IP/credenciales,
+  - o tiene un problema de CORS (no permite Authorization).
+- Tiempo: cuando pegues el middleware puedo indicarte la corrección exacta (ejemplo: añadir Authorization a Access-Control-Allow-Headers, quitar doble comprobación, ajustar la comprobación Bearer).
+
+Dado que confirmaste que el login devuelve tokens pero luego al navegar a Pacientes obtienes 401 y antes viste 429 en el login (posible rate-limit por múltiples envíos), mi recomendación inmediata es:
+
+- Añadir el interceptor (Opción 1) para garantizar que el header Authorization se envíe de forma centralizada y para ver un log claro. Si quieres, lo implemento ahora. Esto nos dirá si el problema es el frontend o el backend.
+
+¿Prefieres que agregue el interceptor ahora? (si es así lo aplico y te pido que reproduzcas el flujo para revisar Network y consola).
