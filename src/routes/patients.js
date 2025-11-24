@@ -44,7 +44,7 @@ router.get('/',
 
     // Get patients
     const patientsQuery = `
-      SELECT p.id, p.documento, p.nombres, p.apellidos, p.fecha_nacimiento,
+      SELECT p.id, p.tipo_documento_id, p.documento, p.nombres, p.apellidos, p.fecha_nacimiento,
              p.telefono, p.correo, p.direccion, p.genero_id, p.estado_civil_id,
              p.creado_en, p.actualizado_en,
              g.nombre as genero_nombre,
@@ -154,27 +154,33 @@ router.post('/',
       estado_civil_id
     } = req.body;
 
-    const result = await query(`
+    // Generate UUID for patient ID
+    const { v4: uuidv4 } = require('uuid');
+    const patientId = uuidv4();
+
+    await query(`
       INSERT INTO pacientes (
-        tipo_documento_id, documento, nombres, apellidos, fecha_nacimiento,
+        id, tipo_documento_id, documento, nombres, apellidos, fecha_nacimiento,
         telefono, correo, direccion, genero_id, estado_civil_id, actualizado_por
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      tipo_documento_id, documento, nombres, apellidos, fecha_nacimiento,
+      patientId, tipo_documento_id, documento, nombres, apellidos, fecha_nacimiento,
       telefono, correo, direccion, genero_id, estado_civil_id, req.user.id
     ]);
 
     // Get created patient
     const newPatient = await query(`
-      SELECT p.id, p.documento, p.nombres, p.apellidos, p.fecha_nacimiento,
+      SELECT p.id, p.tipo_documento_id, p.documento, p.nombres, p.apellidos, p.fecha_nacimiento,
              p.telefono, p.correo, p.direccion, p.genero_id, p.estado_civil_id,
              g.nombre as genero_nombre,
-             ec.descripcion as estado_civil
+             ec.descripcion as estado_civil,
+             td.descripcion as tipo_documento
       FROM pacientes p
       LEFT JOIN generos g ON p.genero_id = g.id
       LEFT JOIN estadocivil ec ON p.estado_civil_id = ec.id
+      LEFT JOIN tipos_documento td ON p.tipo_documento_id = td.id
       WHERE p.id = ?
-    `, [result.insertId]);
+    `, [patientId]);
 
     res.status(201).json({
       success: true,
@@ -240,13 +246,15 @@ router.put('/:id',
 
     // Get updated patient
     const updatedPatient = await query(`
-      SELECT p.id, p.documento, p.nombres, p.apellidos, p.fecha_nacimiento,
+      SELECT p.id, p.tipo_documento_id, p.documento, p.nombres, p.apellidos, p.fecha_nacimiento,
              p.telefono, p.correo, p.direccion, p.genero_id, p.estado_civil_id,
              g.nombre as genero_nombre,
-             ec.descripcion as estado_civil
+             ec.descripcion as estado_civil,
+             td.descripcion as tipo_documento
       FROM pacientes p
       LEFT JOIN generos g ON p.genero_id = g.id
       LEFT JOIN estadocivil ec ON p.estado_civil_id = ec.id
+      LEFT JOIN tipos_documento td ON p.tipo_documento_id = td.id
       WHERE p.id = ?
     `, [id]);
 

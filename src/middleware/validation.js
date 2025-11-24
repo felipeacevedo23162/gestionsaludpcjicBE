@@ -59,8 +59,8 @@ const updateUserValidation = [
 const createPatientValidation = [
   body('tipo_documento_id').optional().isInt({ min: 1 }).withMessage('Valid document type ID required'),
   documentValidation,
-  nameValidation('nombres').optional(),
-  nameValidation('apellidos').optional(),
+  nameValidation('nombres'),
+  nameValidation('apellidos'),
   body('fecha_nacimiento').optional().isISO8601().toDate().withMessage('Valid birth date required'),
   phoneValidation,
   emailValidation,
